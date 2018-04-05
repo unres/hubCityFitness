@@ -13,6 +13,8 @@ func main() {
 		panic(err)
 	}
 
+	http.Handle("/", http.FileServer(http.Dir("static")))
+
 	http.HandleFunc("/submitUser", func(w http.ResponseWriter, r *http.Request) {
 		obj := map[string]interface{}{}
 		json.NewDecoder(r.Body).Decode(&obj)
