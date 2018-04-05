@@ -1,0 +1,28 @@
+
+body,h1,h2,h3,h4,h5,h6 {font-family: "Lato", sans-serif}
+.w3-bar,h1,button {font-family: "Montserrat", sans-serif}
+.fa-anchor,.fa-coffee {font-size:200px}
+.w3-theme {color:#fff !important;background-color:#3f51b5 !important}
+.w3-theme-light {color:#000 !important;background-color:#e8eaf6 !important}
+.w3-theme-dark {color:#fff !important;background-color:#1a237e !important}
+
+.w3-theme-l5 {color:#000 !important;background-color:#ff0000 !important}
+.w3-theme-l4 {color:#000 !important;background-color:#ff0000 !important}
+.w3-theme-l3 {color:#000 !important;background-color:#ff8080 !important}
+.w3-theme-l2 {color:#fff !important;background-color:#ff4d4d !important}
+.w3-theme-l1 {color:#fff !important;background-color:#ff4d4d !important}
+.w3-theme-d1 {color:#fff !important;background-color:#ff0000 !important}
+.w3-theme-d2 {color:#fff !important;background-color:#cc0000 !important}
+.w3-theme-d3 {color:#fff !important;background-color:#ff0000 !important}
+.w3-theme-d4 {color:#fff !important;background-color:#ff4d4d !important}
+
+.w3-theme-action {color:#fff !important;background-color:#311b92 !important}
+.w3-text-theme {color:#1a237e !important}
+
+body {
+    background-color: black;
+}
+
+* {
+  box-sizing: border-box;
+}
