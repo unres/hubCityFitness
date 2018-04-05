@@ -28,7 +28,7 @@ func main() {
 		fmt.Println(string(data))
 		fmt.Println(q)
 
-		err = db.Write("t", "1", &q)
+		err = db.Write("users", q.Get("email"), &q)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
