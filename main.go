@@ -2,7 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"net/http"
+	"net/url"
 
 	scribble "github.com/nanobox-io/golang-scribble"
 )
@@ -16,9 +19,27 @@ func main() {
 	http.Handle("/", http.FileServer(http.Dir("static")))
 
 	http.HandleFunc("/submitUser", func(w http.ResponseWriter, r *http.Request) {
-		obj := map[string]interface{}{}
-		json.NewDecoder(r.Body).Decode(&obj)
-		db.Write("t", "1", &obj)
+		data, _ := ioutil.ReadAll(r.Body)
+		q, err := url.ParseQuery(string(data))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		fmt.Println(string(data))
+		fmt.Println(q)
+
+		err = db.Write("t", "1", &q)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		data, _ = json.MarshalIndent(&q, "", "    ")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Write(data)
+		http.StatusText(http.StatusOK)
 	})
 
 	http.ListenAndServe(":8080", nil)
