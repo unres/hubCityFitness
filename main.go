@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"os"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -15,12 +14,14 @@ import (
 )
 
 func main() {
+	log.SetFlags(log.Lshortfile)
 	db, err := scribble.New("./db", nil)
 	if err != nil {
 		panic(err)
 	}
 
-	http.Handle("/", http.FileServer(http.Dir("static")))
+	fs := http.FileServer(http.Dir("static"))
+	http.Handle("/", fs)
 
 	http.HandleFunc("/submitUser", func(w http.ResponseWriter, r *http.Request) {
 		data, _ := ioutil.ReadAll(r.Body)
@@ -31,14 +32,10 @@ func main() {
 		}
 
 		//checks if user has entered email already
-		_, err = os.Stat("./db/users/" + q.Get("email") + ".json")
+		err = db.Read("users", q.Get("email"), nil)
 		if err == nil {
 			http.Error(w, "Email Taken", http.StatusConflict)
-			return
-		}
-		fmt.Println(err)
-		if !os.IsNotExist(err) {
-			http.Error(w, "Email Taken", http.StatusConflict)
+			log.Println(err)
 			return
 		}
 
@@ -49,6 +46,10 @@ func main() {
 
 		q.Del("psw-repeat")
 		pw := hashAndSalt([]byte(q.Get("psw")))
+		if pw == "" {
+			http.Error(w, "Password not long enough", http.StatusBadRequest)
+			return
+		}
 		q.Set("psw", pw)
 
 		err = db.Write("users", q.Get("email"), &q)
@@ -81,16 +82,23 @@ func main() {
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 			return
 		}
-		if comparePasswords(q.Get("psw"), []byte(user.Get("psw"))) {
+		if !comparePasswords(user.Get("psw"), []byte(q.Get("psw"))) {
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 			return
 		}
 
+		http.SetCookie(w, &http.Cookie{Name: "auth", Value: string(createJWT(q.Get("uname")))})
 		w.Write(createJWT(q.Get("uname")))
+
 	})
 	http.HandleFunc("/schedule", func(w http.ResponseWriter, r *http.Request) {
 
-		u, valid := verifyJWT(r.Header.Get("Authorization"))
+		c, err := r.Cookie("auth")
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+			return
+		}
+		u, valid := verifyJWT(c.Value)
 		if !valid {
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 			return
@@ -111,6 +119,7 @@ func hashAndSalt(pwd []byte) string {
 	hash, err := bcrypt.GenerateFromPassword(pwd, bcrypt.MinCost)
 	if err != nil {
 		log.Println(err)
+		return ""
 	}
 
 	// GenerateFromPassword returns a byte slice so we need to
@@ -147,12 +156,15 @@ func createJWT(username string) []byte {
 }
 
 func verifyJWT(tk string) (string, bool) {
-	token, _ := jwt.Parse(tk, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.Parse(tk, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("There was an error")
 		}
 		return []byte("secret"), nil
 	})
+	if err != nil {
+		return "", false
+	}
 	claims, ok := token.Claims.(jwt.MapClaims)
 
 	if !ok || !token.Valid {
