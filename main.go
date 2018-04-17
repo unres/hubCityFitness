@@ -198,7 +198,12 @@ func serveTemplate(s string) func(w http.ResponseWriter, r *http.Request) {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		t.ExecuteTemplate(w, s, getUser(r))
+		err := t.ExecuteTemplate(w, s, getUser(r))
+		if err != nil {
+			log.Println(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 
 	}
 }
