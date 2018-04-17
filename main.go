@@ -68,9 +68,7 @@ func main() {
 			return
 		}
 
-		fmt.Fprintf(w, "User: %s signed up", q.Get("email"))
-
-		http.StatusText(http.StatusOK)
+		http.Redirect(w, r, "/login_SignUp.html", http.StatusTemporaryRedirect)
 	})
 
 	http.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
@@ -98,8 +96,7 @@ func main() {
 		}
 
 		http.SetCookie(w, &http.Cookie{Name: "auth", Value: string(createJWT(q.Get("uname")))})
-		w.Write(createJWT(q.Get("uname")))
-
+		http.Redirect(w, r, "/index.html", http.StatusTemporaryRedirect)
 	})
 	http.HandleFunc("/schedule", func(w http.ResponseWriter, r *http.Request) {
 
@@ -200,6 +197,21 @@ func InitTemplates() *template.Template {
 func serveTemplate(s string) func(w http.ResponseWriter, r *http.Request) {
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		t.ExecuteTemplate(w, s, nil)
+
+		t.ExecuteTemplate(w, s, getUser(r))
+
 	}
+}
+func getUser(r *http.Request) string {
+	c, err := r.Cookie("auth")
+	if err != nil {
+		log.Println(err)
+		return "login/sign-up"
+	}
+	u, valid := verifyJWT(c.Value)
+	if !valid {
+		log.Println(err)
+		return "login/sign-up"
+	}
+	return u
 }
