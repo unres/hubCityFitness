@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -13,6 +14,8 @@ import (
 	scribble "github.com/nanobox-io/golang-scribble"
 )
 
+var t = InitTemplates()
+
 func main() {
 	log.SetFlags(log.Lshortfile)
 	db, err := scribble.New("./db", nil)
@@ -22,6 +25,13 @@ func main() {
 
 	fs := http.FileServer(http.Dir("static"))
 	http.Handle("/", fs)
+
+	http.HandleFunc("/aboutUs.html", serveTemplate("aboutUs"))
+	http.HandleFunc("/index.html", serveTemplate("index"))
+	http.HandleFunc("/contactme.html", serveTemplate("contactme"))
+	http.HandleFunc("/login_SignUp.html", serveTemplate("login_SignUp"))
+	http.HandleFunc("/signup.html", serveTemplate("signup"))
+	http.HandleFunc("/schedule.html", serveTemplate("schedule"))
 
 	http.HandleFunc("/submitUser", func(w http.ResponseWriter, r *http.Request) {
 		data, _ := ioutil.ReadAll(r.Body)
@@ -172,4 +182,24 @@ func verifyJWT(tk string) (string, bool) {
 	}
 	return claims["username"].(string), true
 
+}
+
+func InitTemplates() *template.Template {
+	files, _ := ioutil.ReadDir("./templates")
+	fileNames := []string{}
+	for _, f := range files {
+		fileNames = append(fileNames, fmt.Sprint("./templates/", f.Name()))
+	}
+
+	s1, err := template.ParseFiles(fileNames...)
+	if err != nil {
+		panic(err)
+	}
+	return s1
+}
+func serveTemplate(s string) func(w http.ResponseWriter, r *http.Request) {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		t.ExecuteTemplate(w, s, nil)
+	}
 }

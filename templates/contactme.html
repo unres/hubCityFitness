@@ -1,0 +1,44 @@
+{{define "contactme"}}
+<!DOCTYPE html>
+<html>
+     <link rel="stylesheet" href="css/contactMe.css">
+
+   <title>
+     Contact Us
+   </title>
+
+ <body>
+
+     {{template "header"}}
+   <div id="header">
+     <h1>Contact Us</h1>
+
+   </div>
+
+   <canvas id="canvas"></canvas>
+
+ <form action="sendmessage.php" method="post" id="form">
+      <input type="hidden" value="lopowers97@live.com" name="send_to" />
+      <input type="hidden" value="powers2123@outlook.com" name="send_from" />
+      <input type="hidden" value="google.com" name="redirect" />
+      <input type="hidden" value="Contact Form Submission" name="subject" />
+
+      <p>Name: <br />
+      <input type="text" name="name" size="45"/></p>
+
+      <p>Email <br />
+      <input type="text" name="email" size="45"/></p>
+
+      <p>Phone Number <br />
+      <input type="text" name="phone" size="45"/></p>
+
+      <p>Message <br />
+      <textarea type="textarea" name="comments" size="45"></textarea></p>
+
+      <input type="submit" value="Submit" />
+
+ </form>
+
+ </body>
+</html>
+{{end}}
